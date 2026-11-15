@@ -1,0 +1,1 @@
+{"name":"firetrace-uganda","version":"1.0.0","private":true,"scripts":{"dev":"vercel dev","test":"node --test tests/*.test.mjs","check":"node --check assets/app.js && node --check assets/core.mjs && node --check api/fires.js"},"engines":{"node":">=20"}}

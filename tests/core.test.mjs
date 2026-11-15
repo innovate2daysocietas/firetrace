@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {parseCSV,aggregate,nearestPlace,closestLabel,dailyCounts,asCSV,regionContains} from '../assets/core.mjs';
+const csv=`latitude,longitude,acq_date,acq_time,satellite,instrument,confidence,frp,daynight\n2.24,32.9,2026-11-12,0901,N,VIIRS,n,12.5,D\n2.55,34.7,2026-11-13,0932,N,VIIRS,h,29,N\n0.34,32.5,2026-11-13,1500,N,VIIRS,l,,D\n`;
+test('parses NASA-shaped observations, missing FRP correctly',()=>{const p=parseCSV(csv);assert.equal(p.length,3);assert.equal(p[0].time,'0901');assert.equal(p[2].frp,null);assert.equal(p[0].frp,12.5)});
+test('supports quoted commas and CRLF',()=>{const p=parseCSV('latitude,longitude,acq_date,instrument\r\n2.2,32.9,2026-11-12,"VIIRS, SNPP"\r\n');assert.equal(p[0].instrument,'VIIRS, SNPP')});
+test('aggregation does not fabricate FRP',()=>{let a=aggregate(parseCSV(csv));assert.equal(a.count,3);assert.equal(a.frpCount,2);assert.equal(a.frpTotal,41.5);assert.equal(a.dates,2)});
+test('nearest reference town is proximity not administrative geography',()=>{assert.equal(nearestPlace({lat:2.25,lon:32.9}).name,'Lira');assert.match(closestLabel({lat:2.25,lon:32.9}),/Lira/)});
+test('timeline sorts dates',()=>{let x=dailyCounts(parseCSV(csv));assert.equal(x.length,2);assert.equal(x[1].count,2)});
+test('exports records',()=>{assert.equal(parseCSV(asCSV(parseCSV(csv))).length,3)});
+test('invalid lat lon are dropped',()=>{let x=parseCSV('latitude,longitude\n99,200\n2,33\n');assert.equal(x.length,1)});
+test('regional selection is geometric not district boundaries',()=>{assert.equal(regionContains({lat:2.24,lon:32.9},'north'),true);assert.equal(regionContains({lat:-.6,lon:30.6},'north'),false)});
